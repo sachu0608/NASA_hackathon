@@ -47,6 +47,21 @@
     height: 12px;
     border: 2px solid white;
     cursor: pointer;
+    position: relative;
+  }
+  .label-box {
+    position: absolute;
+    bottom: 20px;
+    left: -40px;
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    border: 1px solid #999;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    white-space: nowrap;
+    display: none;
+    z-index: 9999;
   }
 </style>
 </head>
@@ -83,6 +98,21 @@
     const marker = document.createElement("div");
     marker.className = "marker";
     marker.title = text;
+
+    // Create popup label box
+    const box = document.createElement("div");
+    box.className = "label-box";
+    box.innerText = text;
+    marker.appendChild(box);
+
+    // Show label box when marker clicked
+    marker.addEventListener("click", (e) => {
+      e.stopPropagation();
+      // Hide all other boxes
+      document.querySelectorAll(".label-box").forEach(b => b.style.display = "none");
+      box.style.display = box.style.display === "block" ? "none" : "block";
+    });
+
     viewer.addOverlay({
       element: marker,
       location: new OpenSeadragon.Point(x, y)
