@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NASA Image Explorer</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.1.0/openseadragon.min.css">
+
+<style>
+  body {
+    margin: 0;
+    background-color: black;
+    color: white;
+    font-family: Arial, sans-serif;
+  }
+  h2 {
+    text-align: center;
+    padding: 10px;
+  }
+  #viewer {
+    width: 100%;
+    height: 85vh;
+    background-color: #000;
+  }
+  #controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    background: #111;
+  }
+  button {
+    background: #222;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 5px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #444;
+  }
+  .marker {
+    background: red;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    border: 2px solid white;
+    cursor: pointer;
+  }
+</style>
+</head>
+
+<body>
+<h2>🛰️ NASA Image Explorer</h2>
+<div id="viewer"></div>
+
+<div id="controls">
+  <button onclick="zoomIn()">Zoom In</button>
+  <button onclick="zoomOut()">Zoom Out</button>
+  <button onclick="activateLabelMode()">Add Label</button>
+  <button onclick="clearLabels()">Clear Labels</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.1.0/openseadragon.min.js"></script>
+<script>
+  // Initialize OpenSeadragon
+  const viewer = OpenSeadragon({
+    id: "viewer",
+    prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.1.0/images/",
+    tileSources: {
+      type: 'image',
+      url: 'https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg'
+      // ✅ High-res NASA "Blue Marble" image (works everywhere)
+    }
+  });
+
+  // Store labels locally
+  let labels = JSON.parse(localStorage.getItem("nasa_labels")) || [];
+
+  // Function to add a label marker
+  function addMarker(x, y, text) {
+    const marker = document.createElement("div");
+    marker.className = "marker";
+    marker.title = text;
+    viewer.addOverlay({
+      element: marker,
+      location: new OpenSeadragon.Point(x, y)
+    });
+  }
+
+  // Load saved labels
+  viewer.addHandler("open", () => {
+    labels.forEach(l => addMarker(l.x, l.y, l.text));
+  });
+
+  // Zoom controls
+  function zoomIn() {
+    viewer.viewport.zoomBy(1.2);
+    viewer.viewport.applyConstraints();
+  }
+
+  function zoomOut() {
+    viewer.viewport.zoomBy(0.8);
+    viewer.viewport.applyConstraints();
+  }
+
+  // Label mode
+  function activateLabelMode() {
+    alert("Click anywhere on the image to add a label.");
+    viewer.addOnceHandler("canvas-click", function(event) {
+      const viewportPoint = viewer.viewport.pointFromPixel(event.position);
+      const text = prompt("Enter label text:");
+      if (text) {
+        addMarker(viewportPoint.x, viewportPoint.y, text);
+        labels.push({ x: viewportPoint.x, y: viewportPoint.y, text });
+        localStorage.setItem("nasa_labels", JSON.stringify(labels));
+      }
+    });
+  }
+
+  // Clear all labels
+  function clearLabels() {
+    if (confirm("Are you sure you want to clear all labels?")) {
+      localStorage.removeItem("nasa_labels");
+      location.reload();
+    }
+  }
+</script>
+</body>
+</html>
